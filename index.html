@@ -1,0 +1,57 @@
+<script>
+    let historico = [
+        { role: "system", content: "Responda sempre em português do Brasil de forma direta e objetiva." }
+    ];
+
+    async function sendMessage() {
+        const inputField = document.getElementById("userInput");
+        const chatContainer = document.getElementById("chat-container");
+        const text = inputField.value.trim();
+
+        if (!text) return;
+
+        appendMessage(text, "user");
+        inputField.value = "";
+
+        historico.push({ role: "user", content: text });
+
+        const loadingDiv = appendMessage("Pensando...", "bot");
+
+        try {
+            // Chama a sua própria API Serverless (/api/chat)
+            const response = await fetch("/api/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    messages: historico
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.choices && data.choices[0]) {
+                const botReply = data.choices[0].message.content;
+                loadingDiv.textContent = botReply;
+                historico.push({ role: "assistant", content: botReply });
+            } else {
+                loadingDiv.textContent = "Ops! Erro ao obter resposta da IA.";
+            }
+
+        } catch (error) {
+            console.error(error);
+            loadingDiv.textContent = "Erro na conexão com o servidor.";
+        }
+    }
+
+    function appendMessage(text, sender) {
+        const chatContainer = document.getElementById("chat-container");
+        const msgDiv = document.createElement("div");
+        msgDiv.classList.add("message", sender);
+        msgDiv.textContent = text;
+        chatContainer.appendChild(msgDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        return msgDiv;
+    }
+</script>
