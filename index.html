@@ -21,15 +21,31 @@
         }
 
         header {
-            padding: 20px;
-            text-align: center;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             border-bottom: 1px solid #2a2a2a;
             background-color: #1e1e1e;
         }
 
         header h1 {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
+        }
+
+        select {
+            padding: 8px 12px;
+            background-color: #121212;
             color: #ffffff;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        select:focus {
+            border-color: #2b5278;
         }
 
         #chat-container {
@@ -81,10 +97,6 @@
             outline: none;
         }
 
-        input:focus {
-            border-color: #2b5278;
-        }
-
         button {
             padding: 12px 20px;
             background-color: #2b5278;
@@ -104,6 +116,14 @@
 
     <header>
         <h1>IsaAI</h1>
+        <select id="modelSelect">
+            <option value="openai/gpt-oss-120b">GPT OSS 120B (Avançado)</option>
+            <option value="openai/gpt-oss-20b">GPT OSS 20B (Rápido)</option>
+            <option value="qwen/qwen3-32b">Qwen 3 32B</option>
+            <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout 17B</option>
+            <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+            <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
+        </select>
     </header>
 
     <div id="chat-container"></div>
@@ -120,7 +140,7 @@
 
         async function sendMessage() {
             const inputField = document.getElementById("userInput");
-            const chatContainer = document.getElementById("chat-container");
+            const selectedModel = document.getElementById("modelSelect").value;
             const text = inputField.value.trim();
 
             if (!text) return;
@@ -139,6 +159,7 @@
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
+                        model: selectedModel,
                         messages: historico
                     })
                 });
@@ -149,6 +170,8 @@
                     const botReply = data.choices[0].message.content;
                     loadingDiv.textContent = botReply;
                     historico.push({ role: "assistant", content: botReply });
+                } else if (data.error && data.error.message) {
+                    loadingDiv.textContent = `Erro da IA: ${data.error.message}`;
                 } else {
                     loadingDiv.textContent = "Ops! Erro ao obter resposta da IA.";
                 }
