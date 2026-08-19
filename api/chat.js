@@ -1,25 +1,17 @@
 export default async function handler(req, res) {
-    // Permite que o frontend acesse o backend (CORS)
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Método não permitido' });
-    }
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
 
     try {
-        const { messages } = req.body;
-
-        // A chave é pega com segurança do ambiente do servidor
+        const { messages, model } = req.body;
         const apiKey = process.env.GROQ_API_KEY;
 
         if (!apiKey) {
-            return res.status(500).json({ error: 'Chave de API não configurada no servidor.' });
+            return res.status(500).json({ error: 'Chave de API não configurada.' });
         }
 
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -29,7 +21,7 @@ export default async function handler(req, res) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'openai/gpt-oss-120b',
+                model: model || 'openai/gpt-oss-120b', // Fallback se não enviado
                 messages: messages
             })
         });
@@ -38,6 +30,6 @@ export default async function handler(req, res) {
         return res.status(200).json(data);
 
     } catch (error) {
-        return res.status(500).json({ error: 'Erro ao processar requisição no servidor.' });
+        return res.status(500).json({ error: 'Erro no servidor.' });
     }
 }
