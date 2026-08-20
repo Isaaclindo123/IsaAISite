@@ -7,11 +7,17 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
 
     try {
-        const { messages, model } = req.body;
+        const { messages, model, systemPrompt } = req.body;
         const apiKey = process.env.GROQ_API_KEY;
 
         if (!apiKey) {
             return res.status(500).json({ error: 'Chave de API não configurada.' });
+        }
+
+        // Atualiza a mensagem do sistema se enviada pelo frontend
+        let finalMessages = [...messages];
+        if (systemPrompt) {
+            finalMessages[0] = { role: 'system', content: systemPrompt };
         }
 
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -21,8 +27,8 @@ export default async function handler(req, res) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: model || 'openai/gpt-oss-120b', // Fallback se não enviado
-                messages: messages
+                model: model || 'openai/gpt-oss-120b',
+                messages: finalMessages
             })
         });
 
