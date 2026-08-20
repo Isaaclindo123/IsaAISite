@@ -27,10 +27,17 @@
             align-items: center;
             border-bottom: 1px solid #2a2a2a;
             background-color: #1e1e1e;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         header h1 {
             font-size: 1.4rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
         }
 
         select {
@@ -116,13 +123,21 @@
 
     <header>
         <h1>IsaAI</h1>
-        <select id="modelSelect">
-    <option value="openai/gpt-oss-120b">GPT OSS 120B (Avançado)</option>
-    <option value="openai/gpt-oss-20b">GPT OSS 20B (Rápido e Leve)</option>
-    <option value="qwen/qwen3.6-27b">Qwen 3.6 27B (Multimodal / Visão)</option>
-    <option value="groq/compound">Groq Compound (Com Ferramentas)</option>
-    <option value="groq/compound-mini">Groq Compound Mini</option>
-</select>
+        <div class="controls">
+            <select id="langSelect">
+                <option value="pt">🇧🇷 Português</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="es">🇪🇸 Español</option>
+            </select>
+
+            <select id="modelSelect">
+                <option value="openai/gpt-oss-120b">GPT OSS 120B (Avançado)</option>
+                <option value="openai/gpt-oss-20b">GPT OSS 20B (Rápido)</option>
+                <option value="qwen/qwen3.6-27b">Qwen 3.6 27B</option>
+                <option value="groq/compound">Groq Compound</option>
+                <option value="groq/compound-mini">Groq Compound Mini</option>
+            </select>
+        </div>
     </header>
 
     <div id="chat-container"></div>
@@ -133,13 +148,20 @@
     </div>
 
     <script>
+        const promptsIdioma = {
+            pt: "Responda sempre em português do Brasil de forma direta e objetiva.",
+            en: "Always respond in English in a direct and concise manner.",
+            es: "Responde siempre en español de forma directa y concisa."
+        };
+
         let historico = [
-            { role: "system", content: "Responda sempre em português do Brasil de forma direta e objetiva." }
+            { role: "system", content: promptsIdioma.pt }
         ];
 
         async function sendMessage() {
             const inputField = document.getElementById("userInput");
             const selectedModel = document.getElementById("modelSelect").value;
+            const selectedLang = document.getElementById("langSelect").value;
             const text = inputField.value.trim();
 
             if (!text) return;
@@ -149,7 +171,7 @@
 
             historico.push({ role: "user", content: text });
 
-            const loadingDiv = appendMessage("Pensando...", "bot");
+            const loadingDiv = appendMessage("...", "bot");
 
             try {
                 const response = await fetch("/api/chat", {
@@ -159,6 +181,7 @@
                     },
                     body: JSON.stringify({
                         model: selectedModel,
+                        systemPrompt: promptsIdioma[selectedLang],
                         messages: historico
                     })
                 });
